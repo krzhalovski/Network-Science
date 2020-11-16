@@ -27,14 +27,17 @@ def get_user_likes(api, user, count=200):
 def get_tweet_info(tweet):
     is_retweet = 'retweeted_status' in tweet.keys()
     
-    hashtags = tweet['entities']['hashtags']
+    hashtags = [entity['text'] for entity in tweet['entities']['hashtags']]
     user_mentions = [entity['screen_name'] for entity in tweet['entities']['user_mentions']]
     
     return (is_retweet, hashtags, user_mentions)
 
 def parse_user(user_directory_path):
     ids = os.listdir(user_directory_path)
+    
     retweeted_users = []
+    user_hashtags = []
+    user_mentions = []
     
     for _id in ids:
         full_path = user_directory_path + _id
@@ -42,12 +45,16 @@ def parse_user(user_directory_path):
         with open(full_path, 'r') as f:
             tweet = json.load(f)
             
-        is_retweet, hashtags, user_mentions = get_tweet_info(tweet)
+        is_retweet, hashtags, mentions = get_tweet_info(tweet)
         
         if is_retweet:
-            retweeted_users.append(tweet['retweeted_status']['screen_name'])
+            retweeted_users.append(tweet['retweeted_status']['user']['screen_name'])
         
+        else:
+            user_hashtags.extend(hashtags)
+            user_mentions.extend(mentions)
         
+    return retweeted_users, user_hashtags, user_mentions
         
         
     
