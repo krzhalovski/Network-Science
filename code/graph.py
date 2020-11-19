@@ -4,28 +4,36 @@ from itertools import count
 
 class Political_Graph():
     
-    def __init__(self, node_names):
-        self.graph = nx.Graph()
-        self.nodes = node_names
+    def __init__(self, representative_nodes):
+        self.graph = nx.MultiGraph()
+        self.node_names = [rep.screen_name for rep in representative_nodes]
         
-        for name in node_names:
-            self.graph.add_node(name)
+        for rep in representative_nodes:
+            self.graph.add_node(rep.screen_name, meta=rep)
     
-    def add_like_weights(self, likes, weight=-1):
-        for user, user_likes in likes:
-            for like in user_likes:
-                if like not in self.nodes or like == user:
+    def are_representatives_parsed(self):
+        return all([self.graph.node[rep]['meta'].is_parsed for rep in self.graph.nodes])
+    
+    def build_network(self):
+        if not self.are_representatives_parsed():
+            return None
+        
+    def add_like_weights(self, color='blue'):
+        for rep in self.graph.nodes:
+            rep_likes = [rep.likes for rep in self.graph.nodes]
+            for liked_user in rep_likes:
+                if liked_user not in self.node_names or liked_user == user:
                     continue
                     
-                if self.graph.has_edge(user, like):
-                    self.graph[user][like]['weight'] += weight
+                if self.graph.has_edge(user, liked_user, key='like'):
+                    self.graph[user][liked_user]['count'] += 1
                 else:
-                    self.graph.add_edge(user, like, weight=weight)
+                    self.graph.add_edge(user, liked_user, key='like', attr={'weight':1, 'color':color})
         
         self.calculate_number_of_neighbors()
                 
     
-    def add_retweet_weights(self, retweets, weight=-2):
+    def add_retweet_weights(self, weight=-2, color='red'):
         for user, user_retweets in retweets:
             for retweet in user_retweets:
                 if retweet not in self.nodes or user==retweet:

@@ -17,13 +17,18 @@ class Representative():
         self.hashtags = []
         self.likes = []
         
+        self.number_of_tweets = 0
+        
     def parse_user(self, directory):
         if self.is_parsed:
             return None
         
         path = directory+self.screen_name+'/'
+        files = os.listdir(directory + self.screen_name)
         
-        for tweet_id in os.listdir(directory + self.screen_name):
+        self.number_of_tweets = len(files)
+        
+        for tweet_id in files:
             with open(path+tweet_id) as tw:
                 tweet = json.load(tw)
             
@@ -37,14 +42,15 @@ class Representative():
                 self.mentions.extend(mentions)
         
         self.hashtags = [hashtag.lower() for hashtag in self.hashtags]
+        self.is_parsed = True
     
     def update_likes(self, likes):
         self.likes = likes
+        
+    def get_retweet_percentage(self):
+        return len(self.retweets)/float(self.number_of_tweets)
     
     def __str__(self):
         return f'{"Republican" if self.party=="R" else "Democrat"} {self.chamber_of_congress} {self.name} of {self.state}'
-    
-    def __repr__(self):
-        return (self.name, self.screen_name, self.state, self.chamber_of_congress)
             
             
