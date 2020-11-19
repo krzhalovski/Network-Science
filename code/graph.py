@@ -12,38 +12,25 @@ class Political_Graph():
             self.graph.add_node(rep.screen_name, meta=rep)
     
     def are_representatives_parsed(self):
-        return all([self.graph.node[rep]['meta'].is_parsed for rep in self.graph.nodes])
+        return all([self.graph.nodes[rep]['meta'].is_parsed for rep in self.graph.nodes])
     
     def build_network(self):
         if not self.are_representatives_parsed():
             return None
         
-    def add_like_weights(self, color='blue'):
+    def add_interactions(self, interaction_type, color='blue'):
         for rep in self.graph.nodes:
-            rep_likes = [rep.likes for rep in self.graph.nodes]
-            for liked_user in rep_likes:
-                if liked_user not in self.node_names or liked_user == user:
+            rep_interactions = getattr(self.graph.nodes[rep]['meta'], interaction_type)
+            
+            for user in rep_interactions:
+                if user not in self.node_names or user == rep:
                     continue
                     
-                if self.graph.has_edge(user, liked_user, key='like'):
-                    self.graph[user][liked_user]['count'] += 1
+                if self.graph.has_edge(rep, user, key=interaction_type):
+                    self.graph[rep][user][interaction_type]['attr']['count'] += 1
                 else:
-                    self.graph.add_edge(user, liked_user, key='like', attr={'weight':1, 'color':color})
+                    self.graph.add_edge(rep, user, key=interaction_type, attr={'count':1, 'color':color})
         
-        self.calculate_number_of_neighbors()
-                
-    
-    def add_retweet_weights(self, weight=-2, color='red'):
-        for user, user_retweets in retweets:
-            for retweet in user_retweets:
-                if retweet not in self.nodes or user==retweet:
-                    continue
-                    
-                if self.graph.has_edge(user, retweet):
-                    self.graph[user][retweet]['weight'] += weight
-                else:
-                    self.graph.add_edge(user, retweet, weight=weight)
-                    
         self.calculate_number_of_neighbors()
     
     def get_isolated_nodes(self):
@@ -67,14 +54,16 @@ class Political_Graph():
 
         groups = set(nx.get_node_attributes(self.graph, 'count').values())
         mapping = dict(zip(sorted(groups), count()))
-        colors = [mapping[self.graph.nodes()[n]['count']] for n in nodes]
+        
+        node_colors = [mapping[self.graph.nodes()[n]['count']] for n in nodes]
+        edge_colors = [self.graph[u][v][key]['attr']['color'] for u,v,key in self.graph.edges]
         
         #pos = nx.spectral_layout(self.graph)
         fig, ax = plt.subplots(1, 1, figsize=(20, 10))
 
-        ed = nx.draw_networkx_edges(self.graph, layout(self.graph), alpha=0.2)
+        ed = nx.draw_networkx_edges(self.graph, layout(self.graph), alpha=1, edge_color=edge_colors)
         no = nx.draw_networkx_nodes(self.graph, layout(self.graph), nodelist=nodes, 
-                                    node_color=colors, node_size=50, cmap=plt.cm.jet, alpha=0.5, ax=ax)
+                                    node_color=node_colors, node_size=50, cmap=plt.cm.jet, alpha=0.5, ax=ax)
         plt.colorbar(no)
         plt.axis('off')
         plt.show()
