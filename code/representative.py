@@ -17,6 +17,7 @@ class Representative():
         self.hashtags = []
         self.likes = []
         
+        self.image = None
         self.number_of_tweets = 0
         
     def parse_user(self, directory):
@@ -32,6 +33,8 @@ class Representative():
             with open(path+tweet_id) as tw:
                 tweet = json.load(tw)
             
+            if self.image == None:
+                self.image = tweet['user']['profile_image_url_https']
             is_retweet, hashtags, mentions = utils.get_tweet_info(tweet)
         
             if is_retweet:
@@ -40,7 +43,7 @@ class Representative():
             else:
                 self.hashtags.extend(hashtags)
                 self.mentions.extend(mentions)
-        
+                
         self.hashtags = [hashtag.lower() for hashtag in self.hashtags]
         self.is_parsed = True
     
@@ -52,5 +55,15 @@ class Representative():
     
     def __str__(self):
         return f'{"Republican" if self.party=="R" else "Democrat"} {self.chamber_of_congress} {self.name} of {self.state}'
+    
+    def __dict__(self):
+        return {
+            'state': self.state,
+            'chamber_of_congress': self.chamber_of_congress,
+            'name': self.name,
+            'screen_name': self.screen_name,
+            'party': self.party,
+            'image': self.image,
+        }
             
             
