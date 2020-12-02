@@ -9,14 +9,14 @@ def like_pipeline(api, list_of_users):
     along with a list of users for which a failed retrieve occured.
     """
     
-    likes = []
+    likes = {}
     failed = []
     
     for user in tqdm(list_of_users):
         try:
             liked_tweets = utils.get_user_likes(api, user)
             screen_names = [like._json['user']['screen_name'] for like in liked_tweets]
-            likes.append((user, screen_names))
+            likes[user] = screen_names
         except Exception as e:
             failed.append((user, e))
             

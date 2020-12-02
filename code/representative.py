@@ -4,11 +4,13 @@ from . import utils
 
 class Representative():
     
-    def __init__(self, state, chamber_of_congress, name, party, screen_name):
+    def __init__(self, name, state, party, screen_name):
         self.state = state
-        self.chamber_of_congress = chamber_of_congress
         self.name = name
-        self.screen_name = screen_name
+        
+        self.screen_name = screen_name[1:] ## Little bug, dropping the @ so the interactions work
+        self.path_name = screen_name ## TODO: Refactor later
+        
         self.party = party
         
         self.is_parsed = False
@@ -21,11 +23,12 @@ class Representative():
         self.number_of_tweets = 0
         
     def parse_user(self, directory):
-        if self.is_parsed:
+        path = directory+self.path_name+'/'
+        
+        if self.is_parsed or not os.path.exists(path):
             return None
         
-        path = directory+self.screen_name+'/'
-        files = os.listdir(directory + self.screen_name)
+        files = os.listdir(directory + self.path_name)
         
         self.number_of_tweets = len(files)
         
@@ -54,16 +57,22 @@ class Representative():
         return len(self.retweets)/float(self.number_of_tweets)
     
     def __str__(self):
-        return f'{"Republican" if self.party=="R" else "Democrat"} {self.chamber_of_congress} {self.name} of {self.state}'
+        return f'{"Republican" if self.party=="R" else "Democrat"} Representative {self.name} of {self.state}'
     
     def __dict__(self):
         return {
             'state': self.state,
-            'chamber_of_congress': self.chamber_of_congress,
             'name': self.name,
             'screen_name': self.screen_name,
             'party': self.party,
+            
             'image': self.image,
+            'is_parsed': self.is_parsed,
+            
+            'likes' : self.likes,
+            'hashtags': self.hashtags,
+            'mentions': self.mentions,
+            'retweets': self.retweets,
         }
             
             
