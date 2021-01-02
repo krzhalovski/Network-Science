@@ -33,6 +33,8 @@ class Representative():
         self.number_of_tweets = len(files)
         
         for tweet_id in files:
+            if tweet_id[0] == '.':
+                continue
             with open(path+tweet_id) as tw:
                 tweet = json.load(tw)
             
