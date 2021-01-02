@@ -8,7 +8,7 @@ class PoliticalMultiGraph():
     """
     
     def __init__(self, representative_nodes):
-        self.graph = nx.MultiGraph()
+        self.graph = nx.Graph()
         self.node_names = [rep.screen_name for rep in representative_nodes]
         
         for rep in representative_nodes:
@@ -123,9 +123,38 @@ class PoliticalGraph():
                     self.graph[rep][user]['retweets'] = 0
                     self.graph[rep][user]['mentions'] = 0
                     self.graph[rep][user][interaction_type] = 1
+                    self.graph[rep][user]['color'] = color
                     
         self.calculate_number_of_neighbors()
     
     def calculate_number_of_neighbors(self):
         for k in self.graph.nodes():
             self.graph.nodes()[k]['count'] = len(self.graph[k])
+            
+    def draw_graph(self, layout, 
+                   node_attrs={'alpha': 1, 'node_size': 50},
+                   edge_attrs={'alpha': 0.2},
+                   save_fig = False,
+                   save_fig_path = "",
+                  ):
+        nodes = self.graph.nodes()
+
+        groups = set(nx.get_node_attributes(self.graph, 'count').values())
+        mapping = dict(zip(sorted(groups), count()))
+        
+        node_colors = [mapping[self.graph.nodes()[n]['count']] for n in nodes]
+        edge_colors = [self.graph[u][v]['color'] for u,v in self.graph.edges]
+        
+        #pos = nx.spectral_layout(self.graph)
+        fig, ax = plt.subplots(1, 1, figsize=(20, 10))
+
+        ed = nx.draw_networkx_edges(self.graph, layout(self.graph), edge_color=edge_colors, **edge_attrs)
+        no = nx.draw_networkx_nodes(self.graph, layout(self.graph), nodelist=nodes, 
+                                    node_color=node_colors, cmap=plt.cm.jet, ax=ax, **node_attrs)
+        plt.colorbar(no)
+        plt.axis('off')
+        
+        if save_fig:
+            plt.savefig(save_fig_path, format='PNG')
+        
+        plt.show()
